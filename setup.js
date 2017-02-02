@@ -13,7 +13,7 @@
 ** security, their passwords are not material.
 **
 **   Web:     datamechanics.org
-**   Version: 0.0.1
+**   Version: 0.0.3
 **
 */
 
@@ -74,7 +74,7 @@ var currentUser =
 db.system.js.save({_id:"currentUser", value:currentUser});
 
 var createCreate =
-  (function(lifespan) {
+  (function() {
     // Build the function that creates a new collection and
     // grants the user that created it write permissions.
     return eval(
@@ -89,8 +89,6 @@ var createCreate =
         + "    collName = user + '.' + collName;"
         + "  var repo = new Mongo().getDB('" + config.repo.name + "');"
         + "  repo.auth('" + config.admin.name + "', '" + config.admin.pwd + "');"
-        + "  repo.createCollection('_registry');"
-        + "  repo.getCollection('_registry').insert({name:collName, lifespan:'" + lifespan + "', creator:user});"
         + "  repo.createCollection(collName);"
         + "  repo.runCommand({grantPrivilegesToRole:user,"
         + "    privileges: ["
@@ -103,13 +101,10 @@ var createCreate =
         + "})"
       ); // eval()
   });
-db.system.js.save({_id:"createTemporary", value:createCreate("temporary")});
-db.system.js.save({_id:"createTemp", value:createCreate("temporary")});
-db.system.js.save({_id:"createPermanent", value:createCreate("permanent")});
-db.system.js.save({_id:"createPerm", value:createCreate("permanent")});
+db.system.js.save({_id:"createCollection", value:createCreate()});
 
 var createDrop =
-  (function(lifespan) {
+  (function() {
     // Build the function that drops a collection.
     return eval(
           "(function(collName, user, pwd) {"
@@ -123,59 +118,13 @@ var createDrop =
         + "    collName = user + '.' + collName;"
         + "  var repo = new Mongo().getDB('" + config.repo.name + "');"
         + "  repo.auth('" + config.admin.name + "', '" + config.admin.pwd + "');"
-        + "  repo.getCollection('_registry').remove({name:collName});"
         + "  repo[collName].drop();"
         + "  repo.auth(user, pwd);"
         + "  return collName;"
         + "})"
       ); // eval()
   });
-db.system.js.save({_id:"dropTemporary", value:createDrop()});
-db.system.js.save({_id:"dropTemp", value:createDrop()});
-db.system.js.save({_id:"dropPermanent", value:createDrop()});
-db.system.js.save({_id:"dropPerm", value:createDrop()});
-
-var createRecord =
-  (function() {
-    // Build the function that stores a provenance record.
-    return eval(
-          "(function(doc, user, pwd) {"
-        + "  /* By default, use current user. */"
-        + "  if (user == null)"
-        + "    user = currentUser();"
-        + "  if (pwd == null)"
-        + "    pwd = user;"
-        + "  var repo = new Mongo().getDB('" + config.repo.name + "');"
-        + "  repo.auth('" + config.admin.name + "', '" + config.admin.pwd + "');"
-        + "  repo.createCollection('_provenance');"
-        + "  var result = repo.getCollection('_provenance').insert(JSON.parse(doc));"
-        + "  repo.auth(user, pwd);"
-        + "  return result;"
-        + "})"
-      ); // eval()
-  });
-db.system.js.save({_id:"record", value:createRecord()});
-
-var createCleanCollections =
-  (function() {
-    // Build the function that cleans out all the temporary collections.
-    // TODO: A separate function to clean out out-of-date role privileges.
-    return eval(
-          "(function() {"
-        + "  var repo = new Mongo().getDB('" + config.repo.name + "');"
-        + "  repo.getCollection('_registry').find().toArray().forEach(function(c) {"
-        + "    if (  c.lifespan == 'temporary'"
-        + "       && (currentUser() == c.creator || currentUser() == 'admin')"
-        + "       ) {"
-        + "      repo.getCollection('_registry').remove({name:c.name});"
-        + "      repo[c.name].drop();"
-        + "    }"
-        + "  });"
-        + "  return 1;"
-        + "})"
-      ); // eval()
-  });
-db.system.js.save({_id:"cleanCollections", value:createCleanCollections()});
+db.system.js.save({_id:"dropCollection", value:createDrop()});
 
 print('Saved custom functions and scripts to "' + config.repo.name + '".');
 
