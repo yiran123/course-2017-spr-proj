@@ -87,3 +87,10 @@ The `auth.json` file should remain empty and should not be submitted. When you a
     }
 }
 ```
+
+## Running the execution script for a contributed project.
+
+To execute all the algorithms for a particular contributor (e.g., `alice_bob`) in an order that respects their explicitly specified data flow dependencies, you can run the following from the root directory:
+```
+python execute.py alice_bob
+```
