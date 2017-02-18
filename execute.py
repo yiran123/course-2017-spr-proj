@@ -2,6 +2,7 @@ import sys
 import os
 import importlib
 import argparse
+import prov.model
 
 parser = argparse.ArgumentParser()
 parser.add_argument("contributor_folder")
@@ -31,7 +32,12 @@ while len(algorithms) > 0:
             break
 
 # Execute the algorithms in order.
+provenance = prov.model.ProvDocument()
 for algorithm in ordered:
     algorithm.execute()
+    provenance = algorithm.provenance(provenance)
+
+# Display a provenance record of the overall execution process.
+print(provenance.get_provn())
 
 ## eof
