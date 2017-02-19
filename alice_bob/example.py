@@ -6,9 +6,9 @@ import datetime
 import uuid
 
 class example(dml.Algorithm):
-    contributor = 'alice_bob'
+    contributor = 'wuhaoyu_yiran123'
     reads = []
-    writes = ['alice_bob.lost', 'alice_bob.found']
+    writes = ["wuhaoyu_yiran123.universityLocation"]
 
     @staticmethod
     def execute(trial = False):
@@ -18,32 +18,39 @@ class example(dml.Algorithm):
         # Set up the database connection.
         client = dml.pymongo.MongoClient()
         repo = client.repo
-        repo.authenticate('alice_bob', 'alice_bob')
+        repo.authenticate('wuhaoyu_yiran123', 'wuhaoyu_yiran123')
 
-        url = 'http://cs-people.bu.edu/lapets/591/examples/lost.json'
+        url = 'http://bostonopendata-boston.opendata.arcgis.com/datasets/cbf14bb032ef4bd38e20429f71acb61a_2.geojson'
         response = urllib.request.urlopen(url).read().decode("utf-8")
         r = json.loads(response)
         s = json.dumps(r, sort_keys=True, indent=2)
-        repo.dropCollection("lost")
-        repo.createCollection("lost")
-        repo['alice_bob.lost'].insert_many(r)
-        repo['alice_bob.lost'].metadata({'complete':True})
-        print(repo['alice_bob.lost'].metadata())
+        repo.dropCollection("universityLocation")
+        repo.createCollection("universityLocation")
+        repo['wuhaoyu_yiran123.universityLocation'].insert_many(r)
 
-        url = 'http://cs-people.bu.edu/lapets/591/examples/found.json'
+
+        url = 'http://bostonopendata-boston.opendata.arcgis.com/datasets/1d9509a8b2fd485d9ad471ba2fdb1f90_0.geojson'
         response = urllib.request.urlopen(url).read().decode("utf-8")
         r = json.loads(response)
         s = json.dumps(r, sort_keys=True, indent=2)
-        repo.dropCollection("found")
-        repo.createCollection("found")
-        repo['alice_bob.found'].insert_many(r)
+        repo.dropCollection("publicSchoolLocation")
+        repo.createCollection("publicSchoolLocation")
+        repo['wuhaoyu_yiran123.publicSchoolLocation'].insert_many(r)
+
+        url = 'http://bostonopendata-boston.opendata.arcgis.com/datasets/0046426a3e4340a6b025ad52b41be70a_1.geojson'
+        response = urllib.request.urlopen(url).read().decode("utf-8")
+        r = json.loads(response)
+        s = json.dumps(r, sort_keys=True, indent=2)
+        repo.dropCollection("nonPublicSchoolLocation")
+        repo.createCollection("nonPublicSchoolLocation")
+        repo['wuhaoyu_yiran123.nonPublicSchoolLocation'].insert_many(r)
 
         repo.logout()
 
         endTime = datetime.datetime.now()
 
         return {"start":startTime, "end":endTime}
-    
+
     @staticmethod
     def provenance(doc = prov.model.ProvDocument(), startTime = None, endTime = None):
         '''
@@ -90,7 +97,7 @@ class example(dml.Algorithm):
         doc.wasDerivedFrom(found, resource, get_found, get_found, get_found)
 
         repo.logout()
-                  
+
         return doc
 
 example.execute()
